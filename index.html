@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AKY TECNOLOGÍA</title>
+    <link rel="icon" href="./img/logoAKY.png">
+
+    <!-- CSS externo -->
+    <link rel="stylesheet" href="styles.css">
+
+    <!-- Fuente moderna -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<header class="header">
+    <div class="header-container">
+        <h1 class="logo">AKY TECOLOGÍA</h1>
+        <p class="slogan">Catálogo de productos disponibles</p>
+    </div>
+</header>
+
+<main class="container">
+    <section id="productos" class="grid-productos"></section>
+</main>
+
+<!-- Botón WhatsApp -->
+<a class="wsp" href="https://wa.me/51918444271" target="_blank" aria-label="WhatsApp">
+    <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="WhatsApp">
+</a>
+
+<script>
+const csvURL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTL2P814V9bhXRebkVdsEcX5ljfY6kALrCO0KisVjRdtu2s48eGkUSC7nU042AbVVS5nzWlV4n05cV6/pub?gid=0&single=true&output=csv";
+
+// CSV parser simple
+function parseCSV(text) {
+    const lines = text.split(/\r?\n/).filter(l => l.trim() !== "");
+    return lines.map(line => {
+        const cols = [];
+        let col = "";
+        let insideQuotes = false;
+
+        for (let c of line) {
+            if (c === '"' && !insideQuotes) insideQuotes = true;
+            else if (c === '"' && insideQuotes) insideQuotes = false;
+            else if (c === ',' && !insideQuotes) {
+                cols.push(col.trim());
+                col = "";
+            } else {
+                col += c;
+            }
+        }
+        cols.push(col.trim());
+        return cols;
+    });
+}
+
+// Drive → imagen directa
+function driveToDirect(url) {
+    const match = url.match(/\/d\/([^/]+)/);
+    if (!match) return url;
+    return `https://lh3.googleusercontent.com/d/${match[1]}`;
+}
+
+fetch(csvURL)
+    .then(res => res.text())
+    .then(text => {
+        const rows = parseCSV(text);
+        const cont = document.getElementById("productos");
+
+        rows.slice(1).forEach(r => {
+            if (r.length < 4) return;
+
+            const card = document.createElement("article");
+            card.className = "producto";
+
+            card.innerHTML = `
+                <div class="img-wrapper">
+                    <img src="${driveToDirect(r[0])}" alt="${r[1]}" loading="lazy">
+                </div>
+                <div class="producto-info">
+                    <h3>${r[1]}</h3>
+                    <p class="precio">${r[2].replace(/"/g,"")}</p>
+                    <p class="descripcion">${r[3]}</p>
+                    <a class="btn-wsp" 
+                       href="https://wa.me/51918444271?text=Hola,%20estoy%20interesado%20en%20${encodeURIComponent(r[1])}" 
+                       target="_blank">
+                       Consultar por WhatsApp
+                    </a>
+                </div>
+            `;
+
+            cont.appendChild(card);
+        });
+    });
+</script>
+</body>
+</html>
