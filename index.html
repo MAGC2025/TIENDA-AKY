@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,101 +12,180 @@
 
     <!-- Fuente moderna -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
-    
+
     <!-- Google Analytics -->
 
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-JYK2QCP2CP"></script>
     <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('js', new Date());
 
-    gtag('config', 'G-JYK2QCP2CP');
+        gtag('config', 'G-JYK2QCP2CP');
     </script>
 
 </head>
+
 <body>
 
-<header class="header">
-    <div class="header-container">
-        <h1 class="logo">AKY TECOLOGÍA</h1>
-        <p class="slogan">Catálogo de productos disponibles</p>
-    </div>
-</header>
+    <header class="header">
+        <div class="header-container">
+            <h1 class="logo">AKY TECOLOGÍA</h1>
+            <p class="slogan">Catálogo de productos disponibles</p>
+        </div>
+    </header>
 
-<main class="container">
-    <section id="productos" class="grid-productos"></section>
-</main>
 
-<!-- Botón WhatsApp -->
-<a class="wsp" href="https://wa.me/51918444271" target="_blank" aria-label="WhatsApp">
-    <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="WhatsApp">
-</a>
+    <main class="container">
+        <aside class="sidebar">
+            <h3>Categorías</h3>
+            <ul id="listaCategorias"></ul>
+        </aside>
 
-<script>
-const csvURL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTL2P814V9bhXRebkVdsEcX5ljfY6kALrCO0KisVjRdtu2s48eGkUSC7nU042AbVVS5nzWlV4n05cV6/pub?gid=0&single=true&output=csv";
+        <section id="productos" class="grid-productos"></section>
+    </main>
 
-// CSV parser simple
-function parseCSV(text) {
-    const lines = text.split(/\r?\n/).filter(l => l.trim() !== "");
-    return lines.map(line => {
-        const cols = [];
-        let col = "";
-        let insideQuotes = false;
 
-        for (let c of line) {
-            if (c === '"' && !insideQuotes) insideQuotes = true;
-            else if (c === '"' && insideQuotes) insideQuotes = false;
-            else if (c === ',' && !insideQuotes) {
+    <!-- Botón WhatsApp -->
+    <a class="wsp" href="https://wa.me/51918444271" target="_blank" aria-label="WhatsApp">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="WhatsApp">
+    </a>
+
+    <script>
+        const csvURL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTL2P814V9bhXRebkVdsEcX5ljfY6kALrCO0KisVjRdtu2s48eGkUSC7nU042AbVVS5nzWlV4n05cV6/pub?gid=0&single=true&output=csv";
+
+        let productos = [];
+
+        // CSV parser
+        function parseCSV(text) {
+            const lines = text.split(/\r?\n/).filter(l => l.trim() !== "");
+            return lines.map(line => {
+                const cols = [];
+                let col = "";
+                let insideQuotes = false;
+
+                for (let c of line) {
+                    if (c === '"' && !insideQuotes) insideQuotes = true;
+                    else if (c === '"' && insideQuotes) insideQuotes = false;
+                    else if (c === ',' && !insideQuotes) {
+                        cols.push(col.trim());
+                        col = "";
+                    } else col += c;
+                }
                 cols.push(col.trim());
-                col = "";
-            } else {
-                col += c;
-            }
+                return cols;
+            });
         }
-        cols.push(col.trim());
-        return cols;
-    });
-}
 
-// Drive → imagen directa
-function driveToDirect(url) {
-    const match = url.match(/\/d\/([^/]+)/);
-    if (!match) return url;
-    return `https://lh3.googleusercontent.com/d/${match[1]}`;
-}
+        // Drive → imagen directa
+        function driveToDirect(url) {
+            const match = url.match(/\/d\/([^/]+)/);
+            if (!match) return url;
+            return `https://lh3.googleusercontent.com/d/${match[1]}`;
+        }
 
-fetch(csvURL)
-    .then(res => res.text())
-    .then(text => {
-        const rows = parseCSV(text);
-        const cont = document.getElementById("productos");
+        // Renderiza productos
+        function renderProductos(lista) {
+            const cont = document.getElementById("productos");
+            cont.innerHTML = "";
 
-        rows.slice(1).forEach(r => {
-            if (r.length < 4) return;
+            lista.forEach(p => {
+                const card = document.createElement("article");
+                card.className = "producto";
 
-            const card = document.createElement("article");
-            card.className = "producto";
+                card.innerHTML = `
+            <div class="img-wrapper">
+                <img src="${driveToDirect(p.img)}" alt="${p.nombre}" loading="lazy">
+            </div>
+            <div class="producto-info">
+                <h3>${p.nombre}</h3>
+                <p class="precio">${p.precio}</p>
+                <p class="descripcion">${p.desc}</p>
+                <a class="btn-wsp" 
+                   href="https://wa.me/51918444271?text=Hola,%20estoy%20interesado%20en%20${encodeURIComponent(p.nombre)}" 
+                   target="_blank">
+                   Consultar por WhatsApp
+                </a>
+            </div>
+        `;
+                cont.appendChild(card);
+            });
+        }
 
-            card.innerHTML = `
-                <div class="img-wrapper">
-                    <img src="${driveToDirect(r[0])}" alt="${r[1]}" loading="lazy">
-                </div>
-                <div class="producto-info">
-                    <h3>${r[1]}</h3>
-                    <p class="precio">${r[2].replace(/"/g,"")}</p>
-                    <p class="descripcion">${r[3]}</p>
-                    <a class="btn-wsp" 
-                       href="https://wa.me/51918444271?text=Hola,%20estoy%20interesado%20en%20${encodeURIComponent(r[1])}" 
-                       target="_blank">
-                       Consultar por WhatsApp
-                    </a>
-                </div>
-            `;
+        // Inicializa menú
+        function initCategorias() {
+            const ul = document.getElementById("listaCategorias");
+            ul.innerHTML = "";
 
-            cont.appendChild(card);
-        });
-    });
-</script>
+            const categorias = ["ALL", ...new Set(productos.map(p => p.cat))];
+
+            categorias.forEach(cat => {
+                const li = document.createElement("li");
+                li.textContent = cat === "ALL" ? "Todos" : cat;
+
+                li.onclick = () => {
+                    document.querySelectorAll(".sidebar li").forEach(x => x.classList.remove("active"));
+                    li.classList.add("active");
+
+                    if (cat === "ALL") renderProductos(productos);
+                    else renderProductos(productos.filter(p => p.cat === cat));
+                };
+
+                ul.appendChild(li);
+            });
+
+            ul.querySelector("li").classList.add("active");
+        }
+
+
+        // Carga inicial
+        fetch(csvURL)
+            .then(res => res.text())
+            .then(text => {
+                const rows = parseCSV(text);
+
+                productos = rows.slice(1).map(r => ({
+                    img: r[0],
+                    nombre: r[1],
+                    precio: r[2].replace(/"/g, ""),
+                    desc: r[3],
+                    cat: r[4] || "Otros"
+                }));
+
+                initCategorias();
+                renderProductos(productos);
+            });
+    </script>
+    <footer class="footer">
+        <div class="footer-container">
+
+            <div class="footer-brand">
+                <h3>AKY TECNOLOGÍA</h3>
+                <p>Catálogo digital de productos tecnológicos</p>
+            </div>
+
+            <div class="footer-social">
+                <a href="https://www.facebook.com/" target="_blank" aria-label="Facebook">
+                    <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/facebook.svg" alt="Facebook">
+                </a>
+
+                <a href="https://www.instagram.com/" target="_blank" aria-label="Instagram">
+                    <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/instagram.svg"
+                        alt="Instagram">
+                </a>
+
+                <a href="https://www.tiktok.com/" target="_blank" aria-label="TikTok">
+                    <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/tiktok.svg" alt="TikTok">
+                </a>
+            </div>
+
+        </div>
+
+        <div class="footer-copy">
+            © 2025 AKY Tecnología · Todos los derechos reservados
+        </div>
+    </footer>
+
 </body>
+
 </html>
